@@ -77,6 +77,30 @@ pub fn build_log(
         shared_strings,
         timesync_data,
         exclude_missing,
+        Option::None
+    )
+}
+
+/// Reconstruct Unified Log entries using the strings data, cached strings data, timesync data, and unified log.
+/// Provide bool to ignore log entries that are not able to be recontructed (additional tracev3 files needed).
+/// Provide a filter function to only return log entries of interest.
+/// Return a reconstructed log entries and any leftover Unified Log entries that could not be reconstructed (data may be stored in other tracev3 files).
+// Log entries with Oversize string entries may have the data in a different tracev3 file.
+pub fn build_log_with_filter(
+    unified_data: &UnifiedLogData,
+    strings_data: &[UUIDText],
+    shared_strings: &[SharedCacheStrings],
+    timesync_data: &[TimesyncBoot],
+    exclude_missing: bool,
+    filter: &dyn Fn(&LogData) -> bool,
+) -> (Vec<LogData>, UnifiedLogData) {
+    LogData::build_log(
+        unified_data,
+        strings_data,
+        shared_strings,
+        timesync_data,
+        exclude_missing,
+        Option::Some(filter)
     )
 }
 

@@ -191,6 +191,7 @@ impl LogData {
         shared_strings: &[SharedCacheStrings],
         timesync_data: &[TimesyncBoot],
         exclude_mssing: bool,
+        filter: Option<&dyn Fn(&LogData) -> bool>,
     ) -> (Vec<LogData>, UnifiedLogData) {
         let mut log_data_vec: Vec<LogData> = Vec::new();
         // Need to keep track of any log entries that fail to find Oversize strings (sometimes the strings may be in other log files that have not been parsed yet)
@@ -605,7 +606,16 @@ impl LogData {
                             firehose
                         ),
                     }
-                    log_data_vec.push(log_data);
+                    match filter {
+                        None => {
+                            log_data_vec.push(log_data);
+                        }
+                        Some(filter_func) => {
+                            if filter_func(&log_data) {
+                                log_data_vec.push(log_data);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -641,7 +651,16 @@ impl LogData {
                     raw_message: String::new(),
                     message_entries: Vec::new(),
                 };
-                log_data_vec.push(log_data);
+                match filter {
+                    None => {
+                        log_data_vec.push(log_data);
+                    }
+                    Some(filter_func) => {
+                        if filter_func(&log_data) {
+                            log_data_vec.push(log_data);
+                        }
+                    }
+                }
             }
 
             for statedump in &catalog_data.statedump {
@@ -709,7 +728,16 @@ impl LogData {
                     raw_message: String::new(),
                     message_entries: Vec::new(),
                 };
-                log_data_vec.push(log_data);
+                match filter {
+                    None => {
+                        log_data_vec.push(log_data);
+                    }
+                    Some(filter_func) => {
+                        if filter_func(&log_data) {
+                            log_data_vec.push(log_data);
+                        }
+                    }
+                }
             }
         }
 
@@ -950,6 +978,7 @@ mod tests {
             &shared_strings_results,
             &timesync_data,
             exclude_missing,
+            Option::None
         );
         assert_eq!(results.len(), 207366);
         assert_eq!(results[0].process, "/usr/libexec/lightsoutmanagementd");
